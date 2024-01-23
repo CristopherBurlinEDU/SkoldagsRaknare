@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skoldagar kvar</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+
+        #countdown,
+        #schoolDaysCountdown {
+            font-size: 2em;
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Dagar kvar tills Juni 12</h1>
+    <div id="countdown"></div>
+    <h1>Skoldagar kvar tills Juni 12</h1>
+    <div id="schoolDaysCountdown"></div>
+
+    <script>
+        const targetDate = new Date('June 13, 2024 00:00:00').getTime();
+
+        const countdownInterval = setInterval(function () {
+            const currentDate = new Date().getTime();
+            const remainingTime = targetDate - currentDate;
+
+            const days = Math.floor(remainingTime / (1000 * 60 * 60 * 24));
+
+            document.getElementById('countdown').innerHTML = `${days} dagar`;
+
+            if (remainingTime < 0) {
+                clearInterval(countdownInterval);
+                document.getElementById('countdown').innerHTML = 'Countdown expired';
+            }
+        }, 1000);
+
+        function calculateSchoolDays() {
+            const startDate = new Date();
+            const endDate = new Date('June 13, 2024 00:00:00');
+            let schoolDays = 0;
+
+            while (startDate <= endDate) {
+                const dayOfWeek = startDate.getDay();
+                const dayOfMonth = startDate.getDate();
+                const month = startDate.getMonth() + 1; // Månadarna är nollindexbaserade
+                const isRedDay =
+                    (month === 2 && dayOfMonth >= 26 && dayOfMonth <= 29) ||
+                    (month === 3 && dayOfMonth === 1) ||
+                    (month === 4 && dayOfMonth >= 1 && dayOfMonth <= 5) ||
+                    (month === 5 && dayOfMonth === 1) ||
+                    (month === 6 && (dayOfMonth === 6 || dayOfMonth === 7));
+
+                if (dayOfWeek !== 0 && dayOfWeek !== 6 && !isRedDay) {
+                    schoolDays++;
+                }
+
+                startDate.setDate(startDate.getDate() + 1);
+            }
+
+            return schoolDays;
+        }
+
+
+        const schoolDaysCountdownInterval = setInterval(function () {
+            const schoolDaysRemaining = calculateSchoolDays();
+            document.getElementById('schoolDaysCountdown').innerHTML = `${schoolDaysRemaining} skoldagar kvar`;
+
+            if (schoolDaysRemaining <= 0) {
+                clearInterval(schoolDaysCountdownInterval);
+                document.getElementById('schoolDaysCountdown').innerHTML = 'Skoldagar countdown expired';
+            }
+        }, 1000);
+    </script>
+
+</body>
+
+</html>
