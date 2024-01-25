@@ -12,89 +12,135 @@
             padding: 50px;
         }
 
+        h1 {
+            font-size: 2em;
+        }
+
         #countdown,
-        #schoolDaysCountdown {
+        #schoolDaysCountdown,
+        #totalDaysCountdown {
             font-size: 2em;
             color: #333;
+            margin-top: 25px;
+        }
+
+        label {
+            font-size: 1.5em;
+        }
+
+        input.dateSelected {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        button {
+            margin-left: 5px;
+            font-size: 1.25em;
+            padding: 10px 20px;
+            cursor: pointer;
         }
     </style>
 </head>
 
 <body>
-
-    <h1>Dagar kvar tills Juni 12</h1>
+    <h1>Skoldags Räknare</h1>
     <div id="countdown"></div>
-    <h1>Skoldagar kvar tills Juni 12</h1>
+
+    <label for="closingDate">Välj skolavslutningsdag:</label>
+    <input class="dateSelected" type="date" id="closingDate" value="2024-06-12">
+    <button onclick="startCountdown()">Se dagar kvar</button>
     <div id="schoolDaysCountdown"></div>
+    <div id="totalDaysCountdown"></div>
 
-<script>
-    const targetDate = new Date('June 13, 2024 00:00:00').getTime();
+    <script>
+        const targetDate = new Date('June 13, 2024 00:00:00').getTime();
+        let selectedClosingDate;
+        let countdownInterval; // Declare globally
 
-    const countdownInterval = setInterval(function () {
-        const currentDate = new Date().getTime();
-        const remainingTime = targetDate - currentDate;
+        function startCountdown() {
+            selectedClosingDate = new Date(document.getElementById('closingDate').value).getTime();
 
-        const days = Math.floor(remainingTime / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((remainingTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
-
-        document.getElementById('countdown').innerHTML = `${days} days ${hours} hours ${minutes} minutes ${seconds} seconds`;
-
-        if (remainingTime < 0) {
-            clearInterval(countdownInterval);
-            document.getElementById('countdown').innerHTML = 'Countdown expired';
-        }
-    }, 1000);
-
-    function calculateSchoolDays() {
-        const startDate = new Date();
-        const endDate = new Date('June 13, 2024 00:00:00');
-        const redDays = [
-            [2, 26],
-            [2, 27],
-            [2, 28],
-            [2, 29],
-            [3, 1],
-            [4, 1],
-            [4, 2],
-            [4, 3],
-            [4, 4],
-            [4, 5],
-            [5, 1],
-            [6, 6],
-            [6, 7],
-        ]; // Red days as [month, day]
-        let schoolDays = 0;
-
-        while (startDate <= endDate) {
-            const dayOfWeek = startDate.getDay();
-            const dayOfMonth = startDate.getDate();
-            const month = startDate.getMonth() + 1; // Months are zero-indexed
-            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-            const isRedDay = redDays.some((date) => date[0] === month && date[1] === dayOfMonth);
-
-            if (!isWeekend && !isRedDay) {
-                schoolDays++;
+            if (isNaN(selectedClosingDate)) {
+                alert('Felaktigt datum. Vänligen välj ett giltigt datum.');
+                return;
             }
 
-            startDate.setDate(startDate.getDate() + 1);
+            document.getElementById('schoolDaysCountdown').innerHTML = ''; // Clear previous countdown
+            document.getElementById('totalDaysCountdown').innerHTML = ''; // Clear previous countdown
+            clearInterval(countdownInterval);
+
+            const currentDate = new Date().getTime();
+            const daysUntilClosing = Math.ceil((selectedClosingDate - currentDate) / (1000 * 60 * 60 * 24));
+
+            if (daysUntilClosing < 0) {
+                document.getElementById('schoolDaysCountdown').innerHTML = 'Skolan är redan SLUT';
+                document.getElementById('totalDaysCountdown').innerHTML = 'Dagarna är redan förbi';
+                return;
+            }
+
+            const schoolDaysRemaining = calculateSchoolDays(selectedClosingDate);
+            document.getElementById('schoolDaysCountdown').innerHTML = `${schoolDaysRemaining} Skoldagar kvar`;
+
+            const totalDaysRemaining = Math.ceil((selectedClosingDate - currentDate) / (1000 * 60 * 60 * 24));
+            document.getElementById('totalDaysCountdown').innerHTML = `${totalDaysRemaining} dagar kvar`;
+
+            startInterval();
         }
 
-        return schoolDays;
-    }
+        function calculateSchoolDays(closingDate) {
+            const startDate = new Date();
+            const endDate = new Date(closingDate);
+            const redDays = [
+                [2, 26],
+                [2, 27],
+                [2, 28],
+                [2, 29],
+                [3, 1],
+                [4, 1],
+                [4, 2],
+                [4, 3],
+                [4, 4],
+                [4, 5],
+                [5, 1],
+                [6, 6],
+                [6, 7],
+            ]; // Red days as [month, day]
+            let schoolDays = 0;
 
-    const schoolDaysCountdownInterval = setInterval(function () {
-        const schoolDaysRemaining = calculateSchoolDays();
+            while (startDate <= endDate) {
+                const dayOfWeek = startDate.getDay();
+                const dayOfMonth = startDate.getDate();
+                const month = startDate.getMonth() + 1; // Months are zero-indexed
+                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                const isRedDay = redDays.some((date) => date[0] === month && date[1] === dayOfMonth);
 
-        document.getElementById('schoolDaysCountdown').innerHTML = `${schoolDaysRemaining} Skol dagar`;
+                if (!isWeekend && !isRedDay) {
+                    schoolDays++;
+                }
 
-        if (schoolDaysRemaining <= 0) {
-            clearInterval(schoolDaysCountdownInterval);
-            document.getElementById('schoolDaysCountdown').innerHTML = 'Skolan är SLUT';
+                startDate.setDate(startDate.getDate() + 1);
+            }
+
+            return schoolDays;
         }
-    }, 1000);
-</script>
+
+        function startInterval() {
+            countdownInterval = setInterval(function () {
+                const schoolDaysRemaining = calculateSchoolDays(selectedClosingDate);
+                document.getElementById('schoolDaysCountdown').innerHTML = `${schoolDaysRemaining} Skoldagar kvar`;
+
+                const currentDate = new Date().getTime();
+                const totalDaysRemaining = Math.ceil((selectedClosingDate - currentDate) / (1000 * 60 * 60 * 24));
+                document.getElementById('totalDaysCountdown').innerHTML = `${totalDaysRemaining} dagar kvar`;
+
+                if (schoolDaysRemaining <= 0) {
+                    clearInterval(countdownInterval);
+                    document.getElementById('schoolDaysCountdown').innerHTML = 'Skolan är SLUT';
+                }
+            }, 1000);
+        }
+    </script>
+
 </body>
 
 </html>
